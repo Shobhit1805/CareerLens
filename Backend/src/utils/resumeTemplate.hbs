@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 11pt;
+        color: #141414;
+        padding: 36px 48px;
+        line-height: 1.4;
+      }
+
+      /* ---------- HEADER ---------- */
+      .header {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+
+      .header h1 {
+        font-size: 26pt;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        color: #141414;
+      }
+
+      .contact-line {
+        font-size: 10pt;
+        color: #4d4d4d;
+        margin-top: 5px;
+      }
+
+      .contact-line span {
+        margin: 0 5px;
+      }
+
+      .separator {
+        color: #4d4d4d;
+      }
+
+      /* ---------- SECTION ---------- */
+      .section {
+        margin-top: 14px;
+      }
+
+      .section-title {
+        font-size: 12pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #141414;
+        padding-bottom: 3px;
+        border-bottom: 2px solid #d4d4d4;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+
+      /* ---------- EXPERIENCE & EDUCATION ---------- */
+      .entry {
+        margin-bottom: 10px;
+      }
+
+      .entry-top-row,
+      .entry-bottom-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+
+      .entry-org {
+        font-size: 11pt;
+        font-weight: 700;
+        color: #141414;
+      }
+
+      .entry-date {
+        font-size: 10pt;
+        color: #4d4d4d;
+        white-space: nowrap;
+      }
+
+      .entry-role {
+        font-size: 10.5pt;
+        font-style: italic;
+        color: #141414;
+      }
+
+      .entry-location {
+        font-size: 10pt;
+        color: #4d4d4d;
+      }
+
+      /* ---------- BULLET POINTS ---------- */
+      ul {
+        margin-top: 4px;
+        padding-left: 16px;
+      }
+
+      ul li {
+        font-size: 10.5pt;
+        color: #141414;
+        margin-bottom: 2px;
+      }
+
+      /* ---------- PROJECTS ---------- */
+      .project-entry {
+        margin-bottom: 10px;
+      }
+
+      .project-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+
+      .project-name {
+        font-size: 11pt;
+        font-weight: 700;
+        color: #141414;
+      }
+
+      .project-date {
+        font-size: 10pt;
+        color: #4d4d4d;
+        white-space: nowrap;
+      }
+
+      /* ---------- SKILLS ---------- */
+      .skills-row {
+        font-size: 10.5pt;
+        margin-bottom: 4px;
+        color: #141414;
+      }
+
+      .skills-row span {
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- HEADER -->
+    <div class="header">
+      <h1>{{name}}</h1>
+      <div class="contact-line">
+        {{#if phone}}
+          📞 {{phone}}
+          <span class="separator">|</span>
+        {{/if}}
+        {{#if email}}
+          ✉ {{email}}
+          <span class="separator">|</span>
+        {{/if}}
+        {{#if linkedin}}
+          LinkedIn: {{linkedin}}
+          <span class="separator">|</span>
+        {{/if}}
+        {{#if location}}
+          📍 {{location}}
+        {{/if}}
+      </div>
+    </div>
+
+    <!-- EXPERIENCE -->
+    {{#if experience.length}}
+    <div class="section">
+      <div class="section-title">Experience</div>
+      {{#each experience}}
+      <div class="entry">
+        <div class="entry-top-row">
+          <span class="entry-org">{{this.company}}</span>
+          <span class="entry-date">{{this.duration}}</span>
+        </div>
+        <div class="entry-bottom-row">
+          <span class="entry-role">{{this.title}}</span>
+        </div>
+        <ul>
+          {{#each this.points}}
+          <li>{{this}}</li>
+          {{/each}}
+        </ul>
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    <!-- PROJECTS -->
+    {{#if projects.length}}
+    <div class="section">
+      <div class="section-title">Projects</div>
+      {{#each projects}}
+      <div class="project-entry">
+        <div class="project-top-row">
+          <span class="project-name">{{this.name}}</span>
+        </div>
+        <div class="skills-row" style="font-weight: normal; font-style: italic; color: #4d4d4d;">
+          {{#each this.tech}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+        </div>
+        <ul>
+          <li>{{this.description}}</li>
+        </ul>
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    <!-- EDUCATION -->
+    {{#if education.length}}
+    <div class="section">
+      <div class="section-title">Education</div>
+      {{#each education}}
+      <div class="entry">
+        <div class="entry-top-row">
+          <span class="entry-org">{{this.institution}}</span>
+          <span class="entry-date">{{this.year}}</span>
+        </div>
+        <div class="entry-bottom-row">
+          <span class="entry-role">{{this.degree}}</span>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    <!-- SKILLS -->
+    {{#if skills.length}}
+    <div class="section">
+      <div class="section-title">Skills</div>
+      <div class="skills-row">
+        <span>Technologies: </span>
+        {{#each skills}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+      </div>
+    </div>
+    {{/if}}
+
+  </body>
+</html>
