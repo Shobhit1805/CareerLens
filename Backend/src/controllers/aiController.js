@@ -1,5 +1,5 @@
 const pdfParse = require("pdf-parse");
-const { analyzeResumeAndJD } = require("../utils/gemini");
+const { analyzeResumeAndJD } = require("../utils/ai");
 const { generateResumePDF } = require("../utils/pdfGenerator");
 
 const analyzeResume = async (req, res) => {
@@ -59,3 +59,4 @@ const downloadResume = async (req, res) => {
 };
 
 module.exports = { analyzeResume, downloadResume };
+
