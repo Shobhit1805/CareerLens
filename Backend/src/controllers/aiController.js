@@ -1,5 +1,5 @@
 const pdfParse = require("pdf-parse");
-const { analyzeResumeAndJD } = require("../utils/ai");
+const { analyzeResumeAndJD, conductInterview, chatWithAI } = require("../utils/ai");
 const { generateResumePDF } = require("../utils/pdfGenerator");
 
 const analyzeResume = async (req, res) => {
@@ -14,7 +14,6 @@ const analyzeResume = async (req, res) => {
       return res.status(400).json({ message: "Please provide a job description" });
     }
 
-    // Extract text from uploaded PDF
     const pdfData = await pdfParse(req.file.buffer);
     const resumeText = pdfData.text;
 
@@ -22,8 +21,11 @@ const analyzeResume = async (req, res) => {
       return res.status(400).json({ message: "Could not extract text from PDF" });
     }
 
-    // Send to Gemini for analysis
     const analysisResult = await analyzeResumeAndJD(resumeText, jobDescription);
+
+    // Store resume text and JD in result for chat context later
+    analysisResult.resumeText = resumeText;
+    analysisResult.jobDescription = jobDescription;
 
     res.status(200).json({
       message: "Analysis complete",
@@ -42,10 +44,8 @@ const downloadResume = async (req, res) => {
       return res.status(400).json({ message: "No resume data provided" });
     }
 
-    // Generate PDF from atsResume data
     const pdfBuffer = await generateResumePDF(atsResume);
 
-    // Send PDF as downloadable file
     res.set({
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${atsResume.name}_resume.pdf"`,
@@ -58,5 +58,61 @@ const downloadResume = async (req, res) => {
   }
 };
 
-module.exports = { analyzeResume, downloadResume };
+const interviewAnswer = async (req, res) => {
+  try {
+    const { question, answer, topic, difficulty, resumeText, jobDescription } = req.body;
 
+    if (!question || !answer) {
+      return res.status(400).json({ message: "Question and answer are required" });
+    }
+
+    const context = `
+      Resume Summary: ${resumeText || "Not provided"}
+      Job Description: ${jobDescription || "Not provided"}
+    `;
+
+    const feedback = await conductInterview(question, answer, topic, difficulty, context);
+
+    res.status(200).json({
+      message: "Answer evaluated",
+      feedback,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const chat = async (req, res) => {
+  try {
+    const { messages, resumeText, jobDescription, analysisResult } = req.body;
+
+    if (!messages || messages.length === 0) {
+      return res.status(400).json({ message: "Messages are required" });
+    }
+
+    const context = `
+      RESUME:
+      ${resumeText || "Not provided"}
+      
+      JOB DESCRIPTION:
+      ${jobDescription || "Not provided"}
+      
+      ANALYSIS RESULTS:
+      Match Score: ${analysisResult?.matchScore || "Not analyzed"}
+      Match Summary: ${analysisResult?.matchSummary || "Not analyzed"}
+      Skill Gaps: ${analysisResult?.skillGaps?.map(s => s.skill).join(", ") || "Not analyzed"}
+      Strengths: ${analysisResult?.strengths?.map(s => s.area).join(", ") || "Not analyzed"}
+    `;
+
+    const reply = await chatWithAI(messages, context);
+
+    res.status(200).json({
+      message: "Reply generated",
+      reply,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { analyzeResume, downloadResume, interviewAnswer, chat };

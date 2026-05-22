@@ -1,5 +1,12 @@
 const User = require("../models/user");
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: "Lax",
+  secure: false,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -13,13 +20,7 @@ const signup = async (req, res) => {
     await user.save();
 
     const token = user.getJWT();
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "None",
-      secure: false,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, COOKIE_OPTIONS);
 
     res.status(201).json({
       message: "Account created successfully",
@@ -49,13 +50,7 @@ const login = async (req, res) => {
     }
 
     const token = user.getJWT();
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "None",
-      secure: false,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, COOKIE_OPTIONS);
 
     res.status(200).json({
       message: "Login successful",
@@ -72,13 +67,7 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    res.cookie("token", "", {
-      httpOnly: true,
-      sameSite: "None",
-      secure: false,
-      maxAge: 0,
-    });
-
+    res.clearCookie("token", COOKIE_OPTIONS);
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

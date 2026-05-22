@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const auth = require("../middlewares/auth");
-const { analyzeResume, downloadResume } = require("../controllers/aiController");
+const { analyzeResume, downloadResume, interviewAnswer, chat } = require("../controllers/aiController");
 
 const storage = multer.memoryStorage();
 
@@ -22,5 +22,7 @@ const upload = multer({
 
 router.post("/analyze", auth, upload.single("resume"), analyzeResume);
 router.post("/download-resume", auth, downloadResume);
+router.post("/interview-answer", auth, interviewAnswer);
+router.post("/chat", auth, chat);
 
 module.exports = router;
