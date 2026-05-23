@@ -1,17 +1,6 @@
 @import "tailwindcss";
+@source "../src";
 @plugin "daisyui";
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  background-color: #f9fafb;
-}
 
 .page-enter {
   animation: fadeSlideIn 0.3s ease forwards;
