@@ -1,11 +1,5 @@
 @import "tailwindcss";
-@plugin "daisyui" {
-  themes: light --default;
-}
-
-@theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
-}
+@plugin "daisyui";
 
 * {
   margin: 0;
@@ -14,11 +8,11 @@
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  background-color: #f9fafb;
 }
 
-/* Smooth page transitions */
 .page-enter {
   animation: fadeSlideIn 0.3s ease forwards;
 }
@@ -32,17 +26,4 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* Skeleton pulse */
-.skeleton-box {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 8px;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
 }
