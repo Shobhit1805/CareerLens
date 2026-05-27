@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  LogOut, Upload, FileText, ChevronRight,
+  LogOut, Upload, FileText,
   Download, Trophy, Target, BookOpen,
   MessageSquare, X, Send, Loader2,
   TrendingUp, AlertCircle, CheckCircle2,
@@ -180,7 +180,7 @@ const SkillGapCard = ({ gap }) => {
 }
 
 // ─── Question Card ────────────────────────────────────────────────────────────
-const QuestionCard = ({ q, type }) => {
+const QuestionCard = ({ q }) => {
   const diffConfig = {
     easy: 'bg-green-100 text-green-700',
     medium: 'bg-yellow-100 text-yellow-700',

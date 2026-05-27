@@ -13,7 +13,7 @@ const App = () => {
 
   useEffect(() => {
     fetchMe()
-  }, [])
+  }, [fetchMe])
 
   return (
     <Routes>

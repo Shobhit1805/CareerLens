@@ -47,7 +47,7 @@ const useAuth = () => {
       dispatch(setLoading(true))
       const data = await authService.getMe()
       dispatch(setUser(data.user))
-    } catch (err) {
+    } catch {
       dispatch(clearUser())
     } finally {
       dispatch(setLoading(false))

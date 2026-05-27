@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Clock, Trophy, ChevronRight, Loader2 } from 'lucide-react'
+import { ArrowLeft, Clock, Trophy, ChevronRight } from 'lucide-react'
 import useAI from '../hooks/useAI'
 
 const InterviewSetup = () => {
@@ -58,8 +58,6 @@ const InterviewSetup = () => {
   }
 
   const buildQuestions = () => {
-    let questions = []
-
     const technical = result.technicalQuestions?.filter(q => {
       if (difficulty === 'Mixed') return selectedTopics.includes(q.topic)
       return selectedTopics.includes(q.topic) && q.difficulty?.toLowerCase() === difficulty.toLowerCase()
@@ -69,10 +67,10 @@ const InterviewSetup = () => {
       ? result.behavioralQuestions || []
       : []
 
-    questions = [...technical, ...behavioral]
+    const allQuestions = [...technical, ...behavioral]
 
     // Shuffle questions
-    return questions.sort(() => Math.random() - 0.5).slice(0, 15)
+    return allQuestions.sort(() => Math.random() - 0.5).slice(0, 15)
   }
 
   const handleStart = () => {
