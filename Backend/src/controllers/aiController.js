@@ -1,6 +1,7 @@
 const pdfParse = require("pdf-parse");
 const { analyzeResumeAndJD, conductInterview, chatWithAI } = require("../utils/ai");
 const { generateResumePDF } = require("../utils/pdfGenerator");
+const Analysis = require("../models/analysis");
 
 const analyzeResume = async (req, res) => {
   try {
@@ -23,12 +24,26 @@ const analyzeResume = async (req, res) => {
 
     const analysisResult = await analyzeResumeAndJD(resumeText, jobDescription);
 
-    // Store resume text and JD in result for chat context later
     analysisResult.resumeText = resumeText;
     analysisResult.jobDescription = jobDescription;
 
+    // Extract job title from JD (first line or first 50 chars)
+    const jobTitle = jobDescription.split("\n")[0].slice(0, 60) || "Untitled Role";
+
+    // Save to MongoDB
+    const analysis = new Analysis({
+      user: req.user._id,
+      jobTitle,
+      jobDescription,
+      resumeText,
+      result: analysisResult,
+    });
+
+    await analysis.save();
+
     res.status(200).json({
       message: "Analysis complete",
+      analysisId: analysis._id,
       data: analysisResult,
     });
   } catch (error) {
@@ -53,6 +68,44 @@ const downloadResume = async (req, res) => {
     });
 
     res.status(200).end(pdfBuffer);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getAnalyses = async (req, res) => {
+  try {
+    const analyses = await Analysis.find({ user: req.user._id })
+      .select("jobTitle createdAt result.matchScore")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: "Analyses fetched successfully",
+      analyses,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getAnalysisById = async (req, res) => {
+  try {
+    const analysis = await Analysis.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
+    if (!analysis) {
+      return res.status(404).json({ message: "Analysis not found" });
+    }
+
+    res.status(200).json({
+      message: "Analysis fetched successfully",
+      data: analysis.result,
+      analysisId: analysis._id,
+      jobTitle: analysis.jobTitle,
+      createdAt: analysis.createdAt,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -115,4 +168,4 @@ const chat = async (req, res) => {
   }
 };
 
-module.exports = { analyzeResume, downloadResume, interviewAnswer, chat };
+module.exports = { analyzeResume, downloadResume, getAnalyses, getAnalysisById, interviewAnswer, chat };
