@@ -5,7 +5,7 @@ import useAuth from '../hooks/useAuth'
 
 const Signup = () => {
   const navigate = useNavigate()
-  const { signup, loading, error } = useAuth()
+  const { signup, error } = useAuth()
 
   const [formData, setFormData] = useState({
     name: '',
@@ -13,6 +13,7 @@ const Signup = () => {
     password: '',
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -20,7 +21,9 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
     await signup(formData)
+    setIsSubmitting(false)
     navigate('/dashboard')
   }
 
@@ -44,7 +47,6 @@ const Signup = () => {
           </p>
         </div>
 
-        {/* Stats */}
         <div className='grid grid-cols-2 gap-6'>
           {[
             { value: '10x', label: 'Faster interview prep' },
@@ -135,10 +137,10 @@ const Signup = () => {
 
             <button
               type='submit'
-              disabled={loading}
+              disabled={isSubmitting}
               className='w-full bg-black text-white py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
             >
-              {loading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 size={16} className='animate-spin' />
                   Creating account...

@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   setResult,
   clearResult,
+  setAnalyses,
   setLoading,
   setError,
   setInterviewSettings,
@@ -13,7 +14,7 @@ import aiService from '../services/aiService'
 
 const useAI = () => {
   const dispatch = useDispatch()
-  const { result, loading, error, interview } = useSelector((state) => state.ai)
+  const { result, analyses, loading, error, interview } = useSelector((state) => state.ai)
 
   const analyzeResume = async (resumeFile, jobDescription) => {
     try {
@@ -28,6 +29,30 @@ const useAI = () => {
       dispatch(setResult(data.data))
     } catch (err) {
       dispatch(setError(err.response?.data?.message || 'Analysis failed'))
+    } finally {
+      dispatch(setLoading(false))
+    }
+  }
+
+  const fetchAnalyses = async () => {
+    try {
+      dispatch(setLoading(true))
+      const data = await aiService.getAnalyses()
+      dispatch(setAnalyses(data.analyses))
+    } catch (err) {
+      dispatch(setError(err.response?.data?.message || 'Failed to fetch analyses'))
+    } finally {
+      dispatch(setLoading(false))
+    }
+  }
+
+  const loadAnalysis = async (id) => {
+    try {
+      dispatch(setLoading(true))
+      const data = await aiService.getAnalysisById(id)
+      dispatch(setResult(data.data))
+    } catch (err) {
+      dispatch(setError(err.response?.data?.message || 'Failed to load analysis'))
     } finally {
       dispatch(setLoading(false))
     }
@@ -97,10 +122,13 @@ const useAI = () => {
 
   return {
     result,
+    analyses,
     loading,
     error,
     interview,
     analyzeResume,
+    fetchAnalyses,
+    loadAnalysis,
     downloadResume,
     startInterview,
     submitAnswer,

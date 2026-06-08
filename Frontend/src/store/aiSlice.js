@@ -4,6 +4,7 @@ const aiSlice = createSlice({
   name: 'ai',
   initialState: {
     result: null,
+    analyses: [],
     loading: false,
     error: null,
     interview: {
@@ -23,6 +24,9 @@ const aiSlice = createSlice({
     clearResult: (state) => {
       state.result = null
       state.error = null
+    },
+    setAnalyses: (state, action) => {
+      state.analyses = action.payload
     },
     setLoading: (state, action) => {
       state.loading = action.payload
@@ -63,6 +67,7 @@ const aiSlice = createSlice({
 export const {
   setResult,
   clearResult,
+  setAnalyses,
   setLoading,
   setError,
   setInterviewSettings,

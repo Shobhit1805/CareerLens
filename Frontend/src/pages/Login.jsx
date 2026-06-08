@@ -5,13 +5,14 @@ import useAuth from '../hooks/useAuth'
 
 const Login = () => {
   const navigate = useNavigate()
-  const { login, loading, error } = useAuth()
+  const { login, error } = useAuth()
 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -19,7 +20,9 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
     await login(formData)
+    setIsSubmitting(false)
     navigate('/dashboard')
   }
 
@@ -43,7 +46,6 @@ const Login = () => {
           </p>
         </div>
 
-        {/* Feature list */}
         <div className='space-y-4'>
           {[
             'AI-powered resume analysis',
@@ -123,10 +125,10 @@ const Login = () => {
 
             <button
               type='submit'
-              disabled={loading}
+              disabled={isSubmitting}
               className='w-full bg-black text-white py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
             >
-              {loading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 size={16} className='animate-spin' />
                   Signing in...

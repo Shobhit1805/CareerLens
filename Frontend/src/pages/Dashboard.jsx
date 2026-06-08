@@ -10,6 +10,54 @@ import {
 import useAuth from '../hooks/useAuth'
 import useAI from '../hooks/useAI'
 
+// ─── Past Analyses Sidebar ────────────────────────────────────────────────────
+const PastAnalyses = ({ analyses, onLoad, loading }) => {
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    })
+  }
+
+  const scoreColor = (score) => {
+    if (score >= 70) return 'text-green-600'
+    if (score >= 40) return 'text-yellow-600'
+    return 'text-red-600'
+  }
+
+  if (analyses.length === 0) {
+    return (
+      <div className='text-center py-8'>
+        <FileText size={28} className='text-gray-200 mx-auto mb-2' />
+        <p className='text-xs text-gray-400'>No past analyses yet</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className='space-y-2'>
+      {analyses.map((analysis) => (
+        <button
+          key={analysis._id}
+          onClick={() => onLoad(analysis._id)}
+          disabled={loading}
+          className='w-full text-left px-3 py-2.5 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all group'
+        >
+          <div className='flex items-start justify-between gap-2'>
+            <p className='text-xs font-medium text-gray-700 line-clamp-2 group-hover:text-gray-900'>
+              {analysis.jobTitle}
+            </p>
+            <span className={`text-xs font-bold flex-shrink-0 ${scoreColor(analysis.result?.matchScore)}`}>
+              {analysis.result?.matchScore}%
+            </span>
+          </div>
+          <p className='text-xs text-gray-400 mt-0.5'>{formatDate(analysis.createdAt)}</p>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ─── Chat Panel ───────────────────────────────────────────────────────────────
 const ChatPanel = ({ onClose }) => {
   const { sendChatMessage } = useAI()
@@ -257,13 +305,31 @@ const StrengthCard = ({ strength }) => (
 const Dashboard = () => {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const { result, loading, error, analyzeResume, downloadResume } = useAI()
+  const {
+    result,
+    analyses,
+    loading,
+    error,
+    analyzeResume,
+    downloadResume,
+    fetchAnalyses,
+    loadAnalysis,
+  } = useAI()
 
   const [resumeFile, setResumeFile] = useState(null)
   const [jobDescription, setJobDescription] = useState('')
   const [activeTab, setActiveTab] = useState('skillGaps')
   const [showChat, setShowChat] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(true)
+
+  useEffect(() => {
+    fetchAnalyses()
+  }, [])
+
+  useEffect(() => {
+    if (result) setActiveTab('skillGaps')
+  }, [result])
 
   const handleLogout = async () => {
     await logout()
@@ -274,7 +340,7 @@ const Dashboard = () => {
     e.preventDefault()
     if (!resumeFile || !jobDescription) return
     await analyzeResume(resumeFile, jobDescription)
-    setActiveTab('skillGaps')
+    await fetchAnalyses()
   }
 
   const handleDrop = (e) => {
@@ -299,8 +365,8 @@ const Dashboard = () => {
 
       {/* Navbar */}
       <nav className='bg-white border-b border-gray-100 sticky top-0 z-40'>
-        <div className='max-w-6xl mx-auto px-6 h-14 flex items-center justify-between'>
-          <div className='flex items-center gap-2'>
+        <div className='max-w-7xl mx-auto px-6 h-14 flex items-center justify-between'>
+          <div className='flex items-center gap-3'>
             <div className='w-7 h-7 bg-black rounded-lg flex items-center justify-center'>
               <span className='text-white text-xs font-bold'>C</span>
             </div>
@@ -340,214 +406,224 @@ const Dashboard = () => {
       </nav>
 
       <div className={`transition-all duration-300 ${showChat ? 'mr-96' : ''}`}>
-        <div className='max-w-4xl mx-auto px-6 py-10'>
+        <div className='max-w-7xl mx-auto px-6 py-8 flex gap-6'>
 
-          {/* Upload Section */}
-          <div className='bg-white rounded-2xl border border-gray-100 shadow-sm mb-8 page-enter'>
-            <div className='p-6 border-b border-gray-50'>
-              <h1 className='text-xl font-bold text-gray-900'>Analyze Your Resume</h1>
-              <p className='text-sm text-gray-500 mt-0.5'>
-                Upload your resume and paste a job description to get AI-powered insights
-              </p>
-            </div>
-
-            <div className='p-6'>
-              {error && (
-                <div className='flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm'>
-                  <AlertCircle size={15} />
-                  {error}
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className='space-y-5'>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
-
-                  {/* File Upload */}
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1.5'>
-                      Resume (PDF)
-                    </label>
-                    <div
-                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-                      onDragLeave={() => setIsDragging(false)}
-                      onDrop={handleDrop}
-                      className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
-                        isDragging
-                          ? 'border-black bg-gray-50'
-                          : resumeFile
-                          ? 'border-green-300 bg-green-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => document.getElementById('resumeInput').click()}
-                    >
-                      <input
-                        id='resumeInput'
-                        type='file'
-                        accept='.pdf'
-                        className='hidden'
-                        onChange={(e) => setResumeFile(e.target.files[0])}
-                      />
-                      {resumeFile ? (
-                        <>
-                          <CheckCircle2 size={24} className='text-green-500 mx-auto mb-2' />
-                          <p className='text-sm font-medium text-green-700'>{resumeFile.name}</p>
-                          <p className='text-xs text-green-500 mt-0.5'>Click to change</p>
-                        </>
-                      ) : (
-                        <>
-                          <Upload size={24} className='text-gray-400 mx-auto mb-2' />
-                          <p className='text-sm text-gray-600'>
-                            Drop your PDF here or <span className='text-black font-medium'>browse</span>
-                          </p>
-                          <p className='text-xs text-gray-400 mt-0.5'>Max 5MB</p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Job Description */}
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1.5'>
-                      Job Description
-                    </label>
-                    <textarea
-                      className='w-full h-36 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all bg-white resize-none'
-                      placeholder='Paste the job description here...'
-                      value={jobDescription}
-                      onChange={(e) => setJobDescription(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                </div>
-
-                <button
-                  type='submit'
-                  disabled={loading || !resumeFile || !jobDescription}
-                  className='w-full bg-black text-white py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 size={16} className='animate-spin' />
-                      Analyzing your resume...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={16} />
-                      Analyze Resume
-                    </>
-                  )}
-                </button>
-              </form>
+          {/* Sidebar — Past Analyses */}
+          <div className={`flex-shrink-0 transition-all duration-300 ${showSidebar ? 'w-56' : 'w-0 overflow-hidden'}`}>
+            <div className='bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-20'>
+              <div className='flex items-center justify-between mb-3'>
+                <h3 className='text-xs font-semibold text-gray-500 uppercase tracking-wide'>
+                  Past Analyses
+                </h3>
+                <span className='text-xs text-gray-400'>{analyses.length}</span>
+              </div>
+              <PastAnalyses
+                analyses={analyses}
+                onLoad={loadAnalysis}
+                loading={loading}
+              />
             </div>
           </div>
 
-          {/* Results Section */}
-          {result && (
-            <div className='space-y-6 page-enter'>
+          {/* Main Content */}
+          <div className='flex-1 min-w-0 space-y-6'>
 
-              {/* Match Score + Actions Row */}
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                <div className='md:col-span-2'>
-                  <MatchScoreCard
-                    score={result.matchScore}
-                    summary={result.matchSummary}
-                  />
-                </div>
-                <div className='flex flex-col gap-3'>
-                  <button
-                    onClick={() => downloadResume(result.atsResume)}
-                    disabled={loading}
-                    className='flex items-center justify-center gap-2 bg-black text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 flex-1'
-                  >
-                    <Download size={15} />
-                    Download ATS Resume
-                  </button>
-                  <button
-                    onClick={() => navigate('/interview')}
-                    className='flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all flex-1'
-                  >
-                    <Trophy size={15} />
-                    Start Mock Interview
-                  </button>
-                </div>
+            {/* Upload Section */}
+            <div className='bg-white rounded-2xl border border-gray-100 shadow-sm page-enter'>
+              <div className='p-5 border-b border-gray-50'>
+                <h1 className='text-lg font-bold text-gray-900'>Analyze Your Resume</h1>
+                <p className='text-xs text-gray-400 mt-0.5'>
+                  Upload your resume and paste a job description to get AI-powered insights
+                </p>
               </div>
 
-              {/* Tabs */}
-              <div className='bg-white rounded-2xl border border-gray-100 shadow-sm'>
-                <div className='flex overflow-x-auto border-b border-gray-100 px-2'>
-                  {tabs.map((tab) => {
-                    const Icon = tab.icon
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-1.5 px-4 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-all ${
-                          activeTab === tab.id
-                            ? 'border-black text-black'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+              <div className='p-5'>
+                {error && (
+                  <div className='flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm'>
+                    <AlertCircle size={15} />
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className='space-y-4'>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+
+                    {/* File Upload */}
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1.5'>
+                        Resume (PDF)
+                      </label>
+                      <div
+                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={handleDrop}
+                        className={`relative border-2 border-dashed rounded-xl p-5 text-center transition-all cursor-pointer ${
+                          isDragging
+                            ? 'border-black bg-gray-50'
+                            : resumeFile
+                            ? 'border-green-300 bg-green-50'
+                            : 'border-gray-200 hover:border-gray-300'
                         }`}
+                        onClick={() => document.getElementById('resumeInput').click()}
                       >
-                        <Icon size={14} />
-                        {tab.label}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <div className='p-5'>
-
-                  {/* Skill Gaps */}
-                  {activeTab === 'skillGaps' && (
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-                      {result.skillGaps?.map((gap, i) => (
-                        <SkillGapCard key={i} gap={gap} />
-                      ))}
+                        <input
+                          id='resumeInput'
+                          type='file'
+                          accept='.pdf'
+                          className='hidden'
+                          onChange={(e) => setResumeFile(e.target.files[0])}
+                        />
+                        {resumeFile ? (
+                          <>
+                            <CheckCircle2 size={22} className='text-green-500 mx-auto mb-1.5' />
+                            <p className='text-sm font-medium text-green-700'>{resumeFile.name}</p>
+                            <p className='text-xs text-green-500 mt-0.5'>Click to change</p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={22} className='text-gray-400 mx-auto mb-1.5' />
+                            <p className='text-sm text-gray-600'>
+                              Drop PDF here or <span className='text-black font-medium'>browse</span>
+                            </p>
+                            <p className='text-xs text-gray-400 mt-0.5'>Max 5MB</p>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  )}
 
-                  {/* Strengths */}
-                  {activeTab === 'strengths' && (
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-                      {result.strengths?.map((strength, i) => (
-                        <StrengthCard key={i} strength={strength} />
-                      ))}
+                    {/* Job Description */}
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1.5'>
+                        Job Description
+                      </label>
+                      <textarea
+                        className='w-full h-36 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all bg-white resize-none'
+                        placeholder='Paste the job description here...'
+                        value={jobDescription}
+                        onChange={(e) => setJobDescription(e.target.value)}
+                        required
+                      />
                     </div>
-                  )}
 
-                  {/* Technical Questions */}
-                  {activeTab === 'technical' && (
-                    <div className='space-y-3'>
-                      {result.technicalQuestions?.map((q, i) => (
-                        <QuestionCard key={i} q={q} type='technical' />
-                      ))}
-                    </div>
-                  )}
+                  </div>
 
-                  {/* Behavioral Questions */}
-                  {activeTab === 'behavioral' && (
-                    <div className='space-y-3'>
-                      {result.behavioralQuestions?.map((q, i) => (
-                        <QuestionCard key={i} q={q} type='behavioral' />
-                      ))}
-                    </div>
-                  )}
-
-                  {/* 30 Day Roadmap */}
-                  {activeTab === 'roadmap' && (
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                      {result.thirtyDayRoadmap?.map((week, i) => (
-                        <RoadmapCard key={i} week={week} />
-                      ))}
-                    </div>
-                  )}
-
-                </div>
+                  <button
+                    type='submit'
+                    disabled={loading || !resumeFile || !jobDescription}
+                    className='w-full bg-black text-white py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 size={16} className='animate-spin' />
+                        Analyzing your resume...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={16} />
+                        Analyze Resume
+                      </>
+                    )}
+                  </button>
+                </form>
               </div>
-
             </div>
-          )}
 
+            {/* Results Section */}
+            {result && (
+              <div className='space-y-5 page-enter'>
+
+                {/* Match Score + Actions */}
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                  <div className='md:col-span-2'>
+                    <MatchScoreCard
+                      score={result.matchScore}
+                      summary={result.matchSummary}
+                    />
+                  </div>
+                  <div className='flex flex-col gap-3'>
+                    <button
+                      onClick={() => downloadResume(result.atsResume)}
+                      disabled={loading}
+                      className='flex items-center justify-center gap-2 bg-black text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 flex-1'
+                    >
+                      <Download size={15} />
+                      Download ATS Resume
+                    </button>
+                    <button
+                      onClick={() => navigate('/interview')}
+                      className='flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all flex-1'
+                    >
+                      <Trophy size={15} />
+                      Start Mock Interview
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tabs */}
+                <div className='bg-white rounded-2xl border border-gray-100 shadow-sm'>
+                  <div className='flex overflow-x-auto border-b border-gray-100 px-2'>
+                    {tabs.map((tab) => {
+                      const Icon = tab.icon
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`flex items-center gap-1.5 px-4 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-all ${
+                            activeTab === tab.id
+                              ? 'border-black text-black'
+                              : 'border-transparent text-gray-500 hover:text-gray-700'
+                          }`}
+                        >
+                          <Icon size={14} />
+                          {tab.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <div className='p-5'>
+                    {activeTab === 'skillGaps' && (
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                        {result.skillGaps?.map((gap, i) => (
+                          <SkillGapCard key={i} gap={gap} />
+                        ))}
+                      </div>
+                    )}
+                    {activeTab === 'strengths' && (
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                        {result.strengths?.map((strength, i) => (
+                          <StrengthCard key={i} strength={strength} />
+                        ))}
+                      </div>
+                    )}
+                    {activeTab === 'technical' && (
+                      <div className='space-y-3'>
+                        {result.technicalQuestions?.map((q, i) => (
+                          <QuestionCard key={i} q={q} type='technical' />
+                        ))}
+                      </div>
+                    )}
+                    {activeTab === 'behavioral' && (
+                      <div className='space-y-3'>
+                        {result.behavioralQuestions?.map((q, i) => (
+                          <QuestionCard key={i} q={q} type='behavioral' />
+                        ))}
+                      </div>
+                    )}
+                    {activeTab === 'roadmap' && (
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                        {result.thirtyDayRoadmap?.map((week, i) => (
+                          <RoadmapCard key={i} week={week} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+          </div>
         </div>
       </div>
 

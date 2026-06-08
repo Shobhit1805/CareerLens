@@ -19,6 +19,16 @@ const aiService = {
     return data
   },
 
+  getAnalyses: async () => {
+    const { data } = await axiosInstance.get('/ai/analyses')
+    return data
+  },
+
+  getAnalysisById: async (id) => {
+    const { data } = await axiosInstance.get(`/ai/analyses/${id}`)
+    return data
+  },
+
   evaluateAnswer: async (payload) => {
     const { data } = await axiosInstance.post('/ai/interview-answer', payload)
     return data
