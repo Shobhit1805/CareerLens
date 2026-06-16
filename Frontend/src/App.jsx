@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import useAuth from './hooks/useAuth'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -10,10 +10,14 @@ import InterviewResult from './pages/InterviewResult'
 
 const App = () => {
   const { isAuthenticated, fetchMe } = useAuth()
+  const hasFetched = useRef(false)
 
   useEffect(() => {
-    fetchMe()
-  }, [fetchMe])
+    if (!hasFetched.current) {
+      hasFetched.current = true
+      fetchMe()
+    }
+  }, [])
 
   return (
     <Routes>

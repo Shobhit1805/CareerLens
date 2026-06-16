@@ -5,7 +5,7 @@ const COOKIE_OPTIONS = {
   sameSite: "Lax",
   secure: false,
   maxAge: 7 * 24 * 60 * 60 * 1000,
-};
+}
 
 const signup = async (req, res) => {
   try {
@@ -67,12 +67,16 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    res.clearCookie("token", COOKIE_OPTIONS);
-    res.status(200).json({ message: "Logged out successfully" });
+    res.clearCookie("token", {
+      httpOnly: true,
+      sameSite: "Lax",
+      secure: false,
+    })
+    res.status(200).json({ message: "Logged out successfully" })
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
-};
+}
 
 const getMe = async (req, res) => {
   try {

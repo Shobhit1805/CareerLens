@@ -34,6 +34,20 @@ const aiSlice = createSlice({
     setError: (state, action) => {
       state.error = action.payload
     },
+    clearAI: (state) => {
+      state.result = null
+      state.analyses = []
+      state.error = null
+      state.loading = false
+      state.interview = {
+        questions: [],
+        currentIndex: 0,
+        answers: [],
+        feedbacks: [],
+        isComplete: false,
+        settings: null,
+      }
+    },
     setInterviewSettings: (state, action) => {
       state.interview.settings = action.payload
     },
@@ -70,6 +84,7 @@ export const {
   setAnalyses,
   setLoading,
   setError,
+  clearAI,
   setInterviewSettings,
   setInterviewQuestions,
   addFeedback,

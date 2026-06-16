@@ -1,5 +1,6 @@
- import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { setUser, clearUser, setLoading, setError } from '../store/authSlice'
+import { clearAI } from '../store/aiSlice'
 import authService from '../services/authService'
 
 const useAuth = () => {
@@ -35,6 +36,7 @@ const useAuth = () => {
       dispatch(setLoading(true))
       await authService.logout()
       dispatch(clearUser())
+      dispatch(clearAI())
     } catch (err) {
       dispatch(setError(err.response?.data?.message || 'Logout failed'))
     } finally {
@@ -43,16 +45,13 @@ const useAuth = () => {
   }
 
   const fetchMe = async () => {
-    try {
-      dispatch(setLoading(true))
-      const data = await authService.getMe()
-      dispatch(setUser(data.user))
-    } catch {
-      dispatch(clearUser())
-    } finally {
-      dispatch(setLoading(false))
-    }
+  try {
+    const data = await authService.getMe()
+    dispatch(setUser(data.user))
+  } catch (err) {
+    dispatch(clearUser())
   }
+}
 
   return { user, isAuthenticated, loading, error, signup, login, logout, fetchMe }
 }
