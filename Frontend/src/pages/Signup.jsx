@@ -90,7 +90,7 @@ const Signup = () => {
                 name='name'
                 value={formData.name}
                 onChange={handleChange}
-                placeholder='Shobhit Jain'
+                placeholder='Your Name'
                 className='w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all bg-white'
                 required
               />
