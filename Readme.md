@@ -6,7 +6,7 @@ It's built as a MERN application with a clear separation between backend service
 
 ## Live Demo
 
-Coming soon.
+career-lens-brown-six.vercel.app
 
 ## Table of Contents
 
